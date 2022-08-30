@@ -4,13 +4,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import study.jpa.dto.MemberDto;
 import study.jpa.entity.Member;
 
+import javax.persistence.QueryHint;
 import java.util.List;
 
 public interface MemberRepository extends JpaRepository<Member, Long> {
@@ -34,6 +33,17 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Modifying
     @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
     int bulkAgePlus(@Param("age") int age);
+
+    @Override
+    @EntityGraph(attributePaths = {"team"})
+    List<Member> findAll();
+
+    @EntityGraph(attributePaths = {"team"})
+    @Query("select m from Member m")
+    List<Member> findMemberEntityGraph();
+
+    @QueryHints(value = @QueryHint(name = "org.hibernate.readOnly", value = "true"))
+    Member findReadOnlyByUsername(String username);
 }
 
 /*

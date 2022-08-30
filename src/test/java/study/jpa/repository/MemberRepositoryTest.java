@@ -9,7 +9,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import study.jpa.entity.Member;
+import study.jpa.entity.Team;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
@@ -19,6 +22,10 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 class MemberRepositoryTest {
     @Autowired MemberRepository memberRepository;
+    @Autowired TeamRepository teamRepository;
+
+    @PersistenceContext
+    private EntityManager em;
 
     @Test
     public void testMember() {
@@ -105,5 +112,67 @@ class MemberRepositoryTest {
         int result = memberRepository.bulkAgePlus(20);
         // then
         assertThat(result).isEqualTo(3);
+    }
+
+    // n+1
+    @Test
+    public void findMemberLazy() throws Exception {
+        // given
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+        memberRepository.save(new Member("member1", 10, teamA));
+        memberRepository.save(new Member("member2", 20, teamB));
+
+        em.flush();
+        em.clear();
+
+        // when
+        List<Member> members = memberRepository.findAll();
+
+        // then
+        for (Member member: members) {
+            member.getTeam().getName();
+        }
+    }
+
+    @Test
+    public void queryHint() throws Exception {
+        // given
+        memberRepository.save(new Member("member1", 10));
+        em.flush();
+        em.clear();
+
+        // when
+        Member member = memberRepository.findReadOnlyByUsername("member1");
+        member.setUsername("member2");
+
+        em.flush();
+
+        // then
+
+    }
+
+    @Test
+    public void JpaEventBaseEntity() throws Exception {
+        // given
+        Member member = new Member("member1");
+        memberRepository.save(member);
+
+        Thread.sleep(100);
+        member.setUsername("member2");
+
+        em.flush(); // <- @PreUpdate
+        em.clear();
+
+        // when
+        Member find = memberRepository.findById(member.getId()).get();
+
+        // then
+        System.out.println("created : " + find.getCreatedDate());
+        System.out.println("updated : " + find.getUpdatedDate());
+
+        // then
     }
 }
