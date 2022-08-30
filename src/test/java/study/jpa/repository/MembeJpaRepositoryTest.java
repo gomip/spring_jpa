@@ -102,4 +102,20 @@ public class MembeJpaRepositoryTest {
         assertThat(members.size()).isEqualTo(3);
         assertThat(total).isEqualTo(6);
     }
+
+    @Test
+    public void bulkUpdate() throws Exception {
+        // given
+        memberJpaRepository.save(new Member("member1", 10));
+        memberJpaRepository.save(new Member("member2", 19));
+        memberJpaRepository.save(new Member("member3", 20));
+        memberJpaRepository.save(new Member("member4", 21));
+        memberJpaRepository.save(new Member("member5", 39));
+
+        // when
+        int result = memberJpaRepository.bulkAgePlus(20);
+
+        // then
+        assertThat(result).isEqualTo(3);
+    }
 }

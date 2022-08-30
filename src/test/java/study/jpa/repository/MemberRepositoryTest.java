@@ -90,4 +90,20 @@ class MemberRepositoryTest {
         assertThat(page.isFirst()).isTrue(); // is it first content?
         assertThat(page.hasNext()).isTrue(); // have next page?
     }
+
+    @Test
+    public void bulkUpdate() throws Exception {
+        // given
+        // given
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 19));
+        memberRepository.save(new Member("member3", 20));
+        memberRepository.save(new Member("member4", 21));
+        memberRepository.save(new Member("member5", 39));
+
+        // when
+        int result = memberRepository.bulkAgePlus(20);
+        // then
+        assertThat(result).isEqualTo(3);
+    }
 }
